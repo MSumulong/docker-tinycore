@@ -1,6 +1,6 @@
 FROM scratch
-ADD rootfs.tar.gz /
-ADD squashfs-tools.tar.gz /
+ADD bin/rootfs.tar.gz /
+ADD bin/squashfs-tools.tar.gz /
 
 RUN mkdir -p /tmp/tce/optional \
     && chown -R root:staff /tmp/tce /usr/local/tce.installed \
