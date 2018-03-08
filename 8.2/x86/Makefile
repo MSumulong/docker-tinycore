@@ -37,6 +37,16 @@ bin/squashfs-tools.tar.gz: src/build_squashfs_tools.sh
 	docker kill $(TMP_CONTAINER_NAME)
 	docker rm $(TMP_CONTAINER_NAME)
 
+check:
+	# Display TinyCore info
+	docker run --rm --name tcl_check $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c \
+		'cat /etc/motd; cat /etc/issue; cat /usr/share/doc/tc/release.txt'
+	# Store version into a variable
+	$(eval DOCKER_TCL_VER := $(shell docker run --rm --name tcl_check \
+		$(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c 'cat /usr/share/doc/tc/release.txt'))
+	# Verify versions match
+	@test $(DOCKER_TCL_VER) = $(TCL_VER)
+
 clean:
 	docker ps | grep -q $(TMP_CONTAINER_NAME) && docker stop $(TMP_CONTAINER_NAME) || true
 	docker ps -a | grep -q $(TMP_CONTAINER_NAME) && docker rm $(TMP_CONTAINER_NAME) || true
