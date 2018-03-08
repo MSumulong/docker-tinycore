@@ -1,8 +1,11 @@
 FROM alpine
 
+ARG TCL_VER_MAJOR
+ARG TCL_ARCH
+
 ADD tce-load.patch /tmp/
 RUN apk add --no-cache curl \
-    && curl -SLO http://www.tinycorelinux.net/8.x/x86/release/distribution_files/rootfs.gz \
+    && curl -SLO http://www.tinycorelinux.net/$TCL_VER_MAJOR.x/$TCL_ARCH/release/distribution_files/rootfs.gz \
     && mkdir rootfs \
     && cd rootfs \
     && gzip -dc ../rootfs.gz | cpio -id \

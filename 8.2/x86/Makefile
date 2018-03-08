@@ -1,5 +1,11 @@
 IMAGE_NAME := tinycore
-IMAGE_TAG := 8.2-x86
+TCL_VER := 8.2.1
+TCL_ARCH := x86
+
+TCL_VER_MAJOR := $(word 1,$(subst ., ,${TCL_VER}))
+TCL_VER_MINOR := $(word 2,$(subst ., ,${TCL_VER}))
+TCL_VER_PATCH := $(word 3,$(subst ., ,${TCL_VER}))
+IMAGE_TAG := $(TCL_VER)-$(TCL_ARCH)
 TMP_IMAGE_NAME := $(IMAGE_NAME)-tar-builder
 TMP_CONTAINER_NAME := $(IMAGE_NAME)-tar-exporter
 
@@ -13,6 +19,8 @@ build: Dockerfile bin/rootfs.tar.gz bin/squashfs-tools.tar.gz
 
 bin/rootfs.tar.gz: src/Dockerfile src/tce-load.patch
 	mkdir -p bin/
+	docker build -t $(TMP_IMAGE_NAME) --build-arg TCL_VER_MAJOR=$(TCL_VER_MAJOR) \
+		--build-arg TCL_ARCH=$(TCL_ARCH) src
 	docker run --name $(TMP_CONTAINER_NAME) $(TMP_IMAGE_NAME)
 	docker wait $(TMP_CONTAINER_NAME)
 	docker cp $(TMP_CONTAINER_NAME):/tmp/rootfs.tar.gz ./bin/
@@ -23,7 +31,9 @@ bin/squashfs-tools.tar.gz: src/build_squashfs_tools.sh
 	mkdir -p bin/
 	docker run -d --privileged --name $(TMP_CONTAINER_NAME) alpine sleep 180
 	docker start $(TMP_CONTAINER_NAME)
-	docker exec -i $(TMP_CONTAINER_NAME) /bin/sh -c 'cat > /tmp/build_squashfs_tools.sh; /bin/sh /tmp/build_squashfs_tools.sh' < src/build_squashfs_tools.sh > squashfs-tools.tar.gz
+	docker exec -i $(TMP_CONTAINER_NAME) /bin/sh -c \
+		'cat > /tmp/build_squashfs_tools.sh; /bin/sh /tmp/build_squashfs_tools.sh \
+		${TCL_VER_MAJOR} ${TCL_ARCH}' < src/build_squashfs_tools.sh > bin/squashfs-tools.tar.gz
 	docker kill $(TMP_CONTAINER_NAME)
 	docker rm $(TMP_CONTAINER_NAME)
 
