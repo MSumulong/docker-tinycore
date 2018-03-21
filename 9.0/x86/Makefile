@@ -39,13 +39,22 @@ bin/squashfs-tools.tar.gz: src/build_squashfs_tools.sh
 
 check:
 	# Display TinyCore info
-	docker run --rm --name tcl_check $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c \
+	@docker run --rm --name tcl_check $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c \
 		'cat /etc/motd; cat /etc/issue; cat /usr/share/doc/tc/release.txt'
 	# Store version into a variable
 	$(eval DOCKER_TCL_VER := $(shell docker run --rm --name tcl_check \
 		$(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c 'cat /usr/share/doc/tc/release.txt'))
 	# Verify versions match
 	@test $(DOCKER_TCL_VER) = $(TCL_VER)
+	# Display architecture
+	@docker run --rm --name tcl_check $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c \
+		'echo -n "Architecture is "; [ -f /lib/ld-linux-x86-64.so.2 ] && echo "x86_64" || echo "x86"'
+	# Store arch into a variable
+	$(eval DOCKER_TCL_ARCH := $(shell docker run --rm --name tcl_check \
+		$(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c '[ -f /lib/ld-linux-x86-64.so.2 ] && echo "x86_64" || echo "x86"'))
+	# Verify arch match
+	@test $(DOCKER_TCL_ARCH) = $(TCL_ARCH)
+
 
 clean:
 	docker ps | grep -q $(TMP_CONTAINER_NAME) && docker stop $(TMP_CONTAINER_NAME) || true
